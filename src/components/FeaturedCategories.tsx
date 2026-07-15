@@ -1,27 +1,27 @@
-export default function FeaturedCategories() {
-  const categories = [
-    "Software Engineer",
-    "Data Scientist",
-    "Product Manager",
-    "DevOps Engineer",
-    "UI/UX Designer",
-    "Cyber Security",
-  ];
+const categories = [
+  "Software Engineer",
+  "Data Scientist",
+  "Product Manager",
+  "DevOps Engineer",
+  "UI/UX Designer",
+  "Cyber Security",
+];
 
+export default function FeaturedCategories() {
   return (
-    <section className="mt-24">
-      <h2 className="mb-6 text-center text-3xl font-bold">
+    <section className="py-20 bg-white">
+      <h2 className="text-5xl font-bold text-center">
         Featured Categories
       </h2>
 
-      <div className="flex flex-wrap justify-center gap-4">
+      <div className="mt-12 flex flex-wrap justify-center gap-6">
         {categories.map((category) => (
-          <div
+          <button
             key={category}
-            className="rounded-lg border bg-white px-6 py-4 shadow-md hover:shadow-lg hover:-translate-y-1 transition cursor-pointer"
+            className="px-8 py-4 border rounded-xl shadow hover:shadow-lg transition"
           >
             {category}
-          </div>
+          </button>
         ))}
       </div>
     </section>
