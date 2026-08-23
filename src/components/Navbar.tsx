@@ -2,21 +2,58 @@ import Link from "next/link";
 
 export default function Navbar() {
   return (
-    <nav className="bg-blue-600 text-white px-8 py-3 flex justify-between items-center">
-      <h1 className="text-2xl font-bold">
-        Jobseon
-      </h1>
-
-      <div className="space-x-6">
-        <Link href="/">Home</Link>
-
-        <Link href="/jobs">Jobs</Link>
-
-        <Link href="/saved-jobs">
-          Saved Jobs
+    <nav className="sticky top-0 z-50 bg-white border-b border-gray-100 shadow-sm">
+      <div className="max-w-7xl mx-auto flex items-center justify-between px-8 py-5">
+        <Link
+          href="/"
+          className="text-4xl font-extrabold text-blue-600"
+        >
+          Jobseon
         </Link>
 
-        <Link href="/login">Login</Link>
+        <div className="hidden md:flex items-center gap-10 text-lg font-medium">
+          <Link
+            href="/"
+            className="text-blue-600"
+          >
+            Home
+          </Link>
+
+          <Link
+            href="/jobs"
+            className="hover:text-blue-600 transition"
+          >
+            Jobs
+          </Link>
+
+          <Link
+            href="/companies"
+            className="hover:text-blue-600 transition"
+          >
+            Companies
+          </Link>
+
+          <Link
+            href="/saved-jobs"
+            className="hover:text-blue-600 transition"
+          >
+            Saved Jobs
+          </Link>
+
+          <Link
+            href="/login"
+            className="hover:text-blue-600 transition"
+          >
+            Login
+          </Link>
+
+          <Link
+            href="/register"
+            className="rounded-xl bg-blue-600 px-6 py-3 text-white hover:bg-blue-700 transition"
+          >
+            Sign Up
+          </Link>
+        </div>
       </div>
     </nav>
   );

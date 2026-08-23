@@ -10,19 +10,27 @@ export default function SearchBar() {
   const [location, setLocation] = useState("");
 
   const handleSearch = () => {
-    router.push(
-  `/jobs?keyword=${keyword}&location=${location}`
-);
-};
+    const params = new URLSearchParams();
+
+    if (keyword.trim()) {
+      params.set("keyword", keyword.trim());
+    }
+
+    if (location.trim()) {
+      params.set("location", location.trim());
+    }
+
+    router.push(`/jobs?${params.toString()}`);
+  };
 
   return (
-    <div className="mt-8 flex gap-4">
+    <div className="mt-8 flex flex-col gap-4 md:flex-row">
       <input
         type="text"
         placeholder="Job Title, Keywords"
         value={keyword}
         onChange={(e) => setKeyword(e.target.value)}
-        className="w-80 rounded-lg border p-4"
+        className="w-full rounded-lg border p-4 md:w-80"
       />
 
       <input
@@ -30,10 +38,11 @@ export default function SearchBar() {
         placeholder="Location"
         value={location}
         onChange={(e) => setLocation(e.target.value)}
-        className="w-80 rounded-lg border p-4"
+        className="w-full rounded-lg border p-4 md:w-80"
       />
 
       <button
+        type="button"
         onClick={handleSearch}
         className="rounded-lg bg-blue-600 px-8 py-4 text-white hover:bg-blue-700"
       >

@@ -1,89 +1,157 @@
-import SortDropdown from "../../components/SortDropdown";
-import FilterSidebar from "../../components/FilterSidebar";
 import Navbar from "../../components/Navbar";
+import FilterSidebar from "../../components/FilterSidebar";
 import JobCard from "../../components/JobCard";
-import { jobs } from "../../data/jobs";
+import SortDropdown from "../../components/SortDropdown";
+import { supabase } from "@/lib/supabase/client";
+
+type Job = {
+  id: number;
+  title: string;
+  company: string;
+  location: string;
+  salary: string;
+  type: string;
+  description?: string;
+};
+
+type JobsPageProps = {
+  searchParams: Promise<{
+    keyword?: string;
+    location?: string;
+    type?: string;
+    sort?: string;
+  }>;
+};
 
 export default async function JobsPage({
   searchParams,
-}: {
-  searchParams: Promise<{
-  keyword?: string;
-  location?: string;
-  sort?: string;
-  type?: string;
-  }>;
-}) {
+}: JobsPageProps) {
   const params = await searchParams;
 
-  const keyword = params.keyword?.toLowerCase() || "";
-  const location = params.location?.toLowerCase() || "";
+  const keyword =
+    params.keyword?.trim().toLowerCase() || "";
+
+  const location =
+    params.location?.trim().toLowerCase() || "";
+
+  const type =
+    params.type?.trim().toLowerCase() || "";
+
   const sort = params.sort || "";
-  const type = params.type || "";
 
-  const filteredJobs = jobs.filter((job) => {
-    const jobTitle = job.title.toLowerCase();
+  // Get jobs from Supabase
+  const { data: jobs, error } = await supabase
+    .from("jobs")
+    .select("*");
 
-    const jobLocation = job.location
+  if (error) {
+    console.error(
+      "Error fetching jobs:",
+      error
+    );
+  }
+
+  let allJobs: Job[] = jobs || [];
+
+  // ----------------------------------------
+  // Normalize search text
+  // ----------------------------------------
+  //
+  // Example:
+  //
+  // "New York"  -> "newyork"
+  // "new york"  -> "newyork"
+  // "NEW YORK"  -> "newyork"
+  // "new-york"  -> "newyork"
+  //
+  const normalize = (value: string) => {
+    return value
       .toLowerCase()
-      .replace(/\s+/g, "");
+      .replace(/[\s\-_]/g, "");
+  };
 
-    const searchLocation = location
-      .toLowerCase()
-      .replace(/\s+/g, "");
+  const normalizedKeyword =
+    normalize(keyword);
 
-    const matchesKeyword =
-  jobTitle.includes(keyword);
+  const normalizedLocation =
+    normalize(location);
 
-const matchesLocation =
-  jobLocation.includes(searchLocation);
+  // ----------------------------------------
+  // Keyword search
+  // ----------------------------------------
 
-const matchesType =
-  type === "" || job.type === type;
-
-return (
-  matchesKeyword &&
-  matchesLocation &&
-  matchesType
-);
-  });
-
-  const sortedJobs = [...filteredJobs];
-
-  if (sort === "salary-high") {
-    sortedJobs.sort((a, b) => {
-      const salaryA = parseInt(
-        a.salary.replace(/[$,]/g, "").split("-")[1]
+  if (normalizedKeyword) {
+    allJobs = allJobs.filter((job) => {
+      const title = normalize(
+        job.title || ""
       );
 
-      const salaryB = parseInt(
-        b.salary.replace(/[$,]/g, "").split("-")[1]
+      const company = normalize(
+        job.company || ""
       );
 
-      return salaryB - salaryA;
+      const description = normalize(
+        job.description || ""
+      );
+
+      return (
+        title.includes(normalizedKeyword) ||
+        company.includes(normalizedKeyword) ||
+        description.includes(normalizedKeyword)
+      );
     });
   }
 
-  if (sort === "salary-low") {
-    sortedJobs.sort((a, b) => {
-      const salaryA = parseInt(
-        a.salary.replace(/[$,]/g, "").split("-")[0]
+  // ----------------------------------------
+  // Location search
+  // ----------------------------------------
+
+  if (normalizedLocation) {
+    allJobs = allJobs.filter((job) => {
+      const jobLocation = normalize(
+        job.location || ""
       );
 
-      const salaryB = parseInt(
-        b.salary.replace(/[$,]/g, "").split("-")[0]
+      return jobLocation.includes(
+        normalizedLocation
       );
-
-      return salaryA - salaryB;
     });
+  }
+
+  // ----------------------------------------
+  // Job type filter
+  // ----------------------------------------
+
+  if (type) {
+    allJobs = allJobs.filter(
+      (job) =>
+        normalize(job.type || "") ===
+        normalize(type)
+    );
+  }
+
+  // ----------------------------------------
+  // Sorting
+  // ----------------------------------------
+
+  if (sort === "title-az") {
+    allJobs.sort((a, b) =>
+      a.title.localeCompare(b.title)
+    );
+  }
+
+  if (sort === "title-za") {
+    allJobs.sort((a, b) =>
+      b.title.localeCompare(a.title)
+    );
   }
 
   return (
     <>
       <Navbar />
 
-      <div className="p-8">
-        <div className="mb-6 flex items-center justify-between">
+      <main className="max-w-6xl mx-auto px-6 py-10">
+        <div className="flex items-center justify-between mb-8">
           <h1 className="text-4xl font-bold">
             Job Search Results
           </h1>
@@ -91,31 +159,36 @@ return (
           <SortDropdown />
         </div>
 
-        {sortedJobs.length === 0 ? (
-          <div className="rounded-lg border bg-white p-8 text-center shadow">
-            <h2 className="text-2xl font-semibold">
-              No Jobs Found
-            </h2>
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+          <FilterSidebar />
 
-            <p className="mt-2 text-gray-600">
-              Try a different keyword or location.
-            </p>
+          <div className="lg:col-span-3 space-y-6">
+            {allJobs.length === 0 ? (
+              <div className="rounded-lg border bg-white p-10 text-center shadow">
+                <h2 className="text-2xl font-bold">
+                  No Jobs Found
+                </h2>
+
+                <p className="mt-3 text-gray-600">
+                  Try changing your search or
+                  filters.
+                </p>
+              </div>
+            ) : (
+              allJobs.map((job) => (
+                <JobCard
+                  key={job.id}
+                  id={Number(job.id)}
+                  title={job.title}
+                  company={job.company}
+                  location={job.location}
+                  salary={job.salary}
+                />
+              ))
+            )}
           </div>
-        ) : (
-          <div className="grid gap-6">
-            {sortedJobs.map((job) => (
-              <JobCard
-                key={job.id}
-                id={job.id}
-                title={job.title}
-                company={job.company}
-                location={job.location}
-                salary={job.salary}
-              />
-            ))}
-          </div>
-        )}
-      </div>
+        </div>
+      </main>
     </>
   );
 }

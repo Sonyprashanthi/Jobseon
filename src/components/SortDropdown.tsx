@@ -6,19 +6,15 @@ export default function SortDropdown() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const handleChange = (
-    event: React.ChangeEvent<HTMLSelectElement>
-  ) => {
-    const params = new URLSearchParams(
-      searchParams.toString()
-    );
+  const currentSort = searchParams.get("sort") || "default";
 
-    const value = event.target.value;
+  const handleSort = (value: string) => {
+    const params = new URLSearchParams(searchParams.toString());
 
-    if (value) {
-      params.set("sort", value);
-    } else {
+    if (value === "default") {
       params.delete("sort");
+    } else {
+      params.set("sort", value);
     }
 
     router.push(`/jobs?${params.toString()}`);
@@ -26,17 +22,15 @@ export default function SortDropdown() {
 
   return (
     <select
-      onChange={handleChange}
-      defaultValue={searchParams.get("sort") || ""}
-      className="rounded-lg border p-3"
+      value={currentSort}
+      onChange={(e) => handleSort(e.target.value)}
+      className="rounded-lg border px-4 py-3"
     >
-      <option value="">Default</option>
-      <option value="salary-high">
-        Highest Salary
-      </option>
-      <option value="salary-low">
-        Lowest Salary
-      </option>
+      <option value="default">Default</option>
+      <option value="salary-high">Salary: High to Low</option>
+      <option value="salary-low">Salary: Low to High</option>
+      <option value="title-az">Job Title: A-Z</option>
+      <option value="title-za">Job Title: Z-A</option>
     </select>
   );
 }
